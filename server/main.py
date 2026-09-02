@@ -433,10 +433,20 @@ async def get_admin_stats():
     finally:
         conn.close()
 
-# ----------------- 现代化 Web 管理看板 -----------------
+# ----------------- 现代化 Web 管理看板与宣传海报 -----------------
+
+POSTER_FILE = os.path.join(os.path.dirname(__file__), "poster.html")
 
 @app.get("/")
 async def root():
+    return RedirectResponse(url="/download")
+
+@app.get("/poster", response_class=HTMLResponse)
+@app.get("/download", response_class=HTMLResponse)
+async def download_poster():
+    if os.path.exists(POSTER_FILE):
+        with open(POSTER_FILE, "r", encoding="utf-8") as f:
+            return f.read()
     return RedirectResponse(url="/admin")
 
 @app.head("/admin")
