@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>CHD 课表 | 长安大学现代化教务与课程中心</title>
+  <meta name="description" content="专为长安大学学子打造的高颜值、极速、现代化的教务课表与学术日程管理系统">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
+</head>
+<body>
+  <!-- 背景氛围光晕 -->
+  <div class="glow-sphere sphere-1"></div>
+  <div class="glow-sphere sphere-2"></div>
+  <div class="glow-sphere sphere-3"></div>
+
+  <!-- 登录全屏模态遮罩 -->
+  <div id="loginOverlay" class="auth-overlay">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="logo-icon">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
+            <path d="M6 6h10"></path>
+            <path d="M6 10h10"></path>
+          </svg>
+        </div>
+        <h1 class="auth-title">CHD 课表中心</h1>
+        <p class="auth-subtitle">长安大学统一身份认证 · 现代化教务聚合</p>
+      </div>
+
+      <form id="loginForm" class="auth-form" onsubmit="return false;">
+        <div class="form-group">
+          <label for="usernameInput">统一身份认证学号</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <input type="text" id="usernameInput" placeholder="请输入学号 (如 2023xxxxxx)" autocomplete="username" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="passwordInput">认证密码</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <input type="password" id="passwordInput" placeholder="请输入密码" autocomplete="current-password" required>
+            <button type="button" class="pwd-toggle" id="pwdToggle" title="切换密码可见性">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div id="captchaGroup" class="form-group" style="display: none;">
+          <label for="captchaInput">图形验证码</label>
+          <div class="captcha-row">
+            <div class="input-wrapper">
+              <input type="text" id="captchaInput" placeholder="验证码">
+            </div>
+            <img id="captchaImg" class="captcha-img" src="" alt="点击刷新" title="看不清？点击刷新">
+          </div>
+        </div>
+
+        <div class="auth-options">
+          <label class="checkbox-label">
+            <input type="checkbox" id="rememberMe" checked>
+            <span class="custom-checkbox"></span>
+            <span>记住密码并在本机自动登录</span>
+          </label>
+        </div>
+
+        <div id="loginError" class="auth-error-banner" style="display: none;"></div>
+
+        <button type="submit" id="loginBtn" class="btn-primary-auth">
+          <span class="btn-text">登录并同步教务课表</span>
+          <div class="btn-spinner" style="display: none;"></div>
+        </button>
+
+        <div class="auth-footer-note">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+          <span>所有密码均通过 AES 动态加密直连校内 IDS 平台，绝不上传第三方服务器</span>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 主体应用容器 -->
+  <div id="appContainer" class="app-layout" style="display: none;">
+    <!-- 顶部导航栏 -->
+    <header class="app-navbar">
+      <div class="nav-left">
+        <div class="brand-badge">
+          <div class="brand-logo">CHD</div>
+          <div class="brand-info">
+            <span class="brand-title">课表中心</span>
+            <span class="brand-sub">长安大学教务</span>
+          </div>
+        </div>
+
+        <!-- 学期切换器 -->
+        <div class="semester-picker">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          <select id="semesterSelect" title="切换学期"></select>
+        </div>
+      </div>
+
+      <div class="nav-right">
+        <!-- 视图切换器 -->
+        <div class="view-switch-group">
+          <button class="view-btn active" data-view="table" id="viewTableBtn" title="周课表矩阵视图">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+              <line x1="3" y1="9" x2="21" y2="9"></line>
+              <line x1="3" y1="15" x2="21" y2="15"></line>
+              <line x1="9" y1="3" x2="9" y2="21"></line>
+              <line x1="15" y1="3" x2="15" y2="21"></line>
+            </svg>
+            <span>周视图</span>
+          </button>
+          <button class="view-btn" data-view="list" id="viewListBtn" title="全部课程列表清单">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="8" y1="6" x2="21" y2="6"></line>
+              <line x1="8" y1="12" x2="21" y2="12"></line>
+              <line x1="8" y1="18" x2="21" y2="18"></line>
+              <line x1="3" y1="6" x2="3.01" y2="6"></line>
+              <line x1="3" y1="12" x2="3.01" y2="12"></line>
+              <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+            <span>课程表清单</span>
+          </button>
+        </div>
+
+        <!-- 快捷功能按钮 -->
+        <div class="action-buttons">
+          <button id="btnGrades" class="nav-action-btn" title="查看绩点与历史成绩">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 20V10"></path>
+              <path d="M18 20V4"></path>
+              <path d="M6 20v-4"></path>
+            </svg>
+            <span>成绩 / 绩点</span>
+          </button>
+
+          <button id="btnExportIcs" class="nav-action-btn highlight" title="导出日历至苹果/华为/小米手机">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>同步到手机日历</span>
+          </button>
+
+
+          <!-- 用户头像与信息 -->
+          <div class="user-profile-menu" id="userMenuBtn">
+            <div class="user-avatar" id="userAvatar">学</div>
+            <div class="user-brief">
+              <span class="user-name" id="userNameDisplay">同学</span>
+              <span class="user-major" id="userMajorDisplay">土地整治工程</span>
+            </div>
+            <button id="logoutBtn" class="logout-icon-btn" title="退出登录">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- 主体内容区域 -->
+    <main class="main-content">
+      <!-- 今日待上课程看板 (Hero Banner) -->
+      <section class="today-hero-card">
+        <div class="today-left">
+          <div class="today-date-badge">
+            <span class="today-week-tag" id="currentWeekTag">第 1 周</span>
+            <span class="today-date-text" id="currentDateText">2026年9月2日 星期三</span>
+          </div>
+          <h2 class="today-headline" id="todayHeadline">今日待上课程</h2>
+        </div>
+
+        <div class="today-right" id="todayCardsContainer">
+          <!-- 动态注入今日卡片或无课提示 -->
+        </div>
+      </section>
+
+      <!-- 周次控制与筛选工具条 -->
+      <div class="week-toolbar">
+        <div class="week-nav-container">
+          <button id="prevWeekBtn" class="week-arrow-btn" title="上一周">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+          <div class="week-chips-scroll" id="weekChipsScroll">
+            <!-- 动态注入 1~20 周药丸选择器 -->
+          </div>
+          <button id="nextWeekBtn" class="week-arrow-btn" title="下一周">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+        </div>
+
+        <div class="filter-controls">
+          <label class="switch-control" title="切换是否展示非本周生效的课程">
+            <input type="checkbox" id="toggleNonCurrentWeeks" checked>
+            <span class="slider round"></span>
+            <span class="switch-label">显示非本周课程(微淡)</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- 课表矩阵容器 (周视图) -->
+      <div id="timetableSection" class="timetable-card">
+        <div class="timetable-grid" id="timetableGrid">
+          <!-- 由 JS 渲染时段列与周一至周日网格 -->
+        </div>
+      </div>
+
+      <!-- 课程列表清单容器 (列表视图) -->
+      <div id="listViewSection" class="list-view-card" style="display: none;">
+        <div class="list-view-header">
+          <h3>本学期修读课程清单</h3>
+          <span class="courses-count-tag" id="coursesCountTag">共 5 门课程</span>
+        </div>
+        <div class="courses-cards-grid" id="coursesCardsGrid">
+          <!-- 动态注入课程元数据卡片 -->
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 课程详情模态弹窗 -->
+  <div id="courseModal" class="modal-backdrop" style="display: none;">
+    <div class="modal-dialog">
+      <div class="modal-header" id="modalHeaderBg">
+        <div class="modal-header-content">
+          <span class="modal-category-badge" id="modalCourseCategory">专业方向课程</span>
+          <h3 class="modal-title" id="modalCourseName">课程名称</h3>
+          <span class="modal-code" id="modalCourseCode">35ZY1220.01</span>
+        </div>
+        <button class="modal-close-btn" id="modalCloseBtn">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="info-row">
+          <div class="info-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+              <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+          </div>
+          <div class="info-meta">
+            <div class="info-label">上课地点</div>
+            <div class="info-value highlight" id="modalCourseRoom">渭水校区 2304</div>
+          </div>
+        </div>
+
+        <div class="info-row">
+          <div class="info-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          <div class="info-meta">
+            <div class="info-label">主讲教师</div>
+            <div class="info-value" id="modalCourseTeachers">任朝霞</div>
+          </div>
+        </div>
+
+        <div class="info-row">
+          <div class="info-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </div>
+          <div class="info-meta">
+            <div class="info-label">上课时间</div>
+            <div class="info-value" id="modalCourseTime">周五 第3-4节 (10:05 - 11:40)</div>
+          </div>
+        </div>
+
+        <div class="info-row">
+          <div class="info-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+          </div>
+          <div class="info-meta">
+            <div class="info-label">上课周次与学分</div>
+            <div class="info-value" id="modalCourseWeeks">1-8周 · 2.0 学分</div>
+          </div>
+        </div>
+
+        <!-- 周次点阵图 -->
+        <div class="weeks-visualizer">
+          <div class="visualizer-title">周次分布概览 (高亮为有课)</div>
+          <div class="weeks-grid" id="modalWeeksGrid"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 成绩与 GPA 模态弹窗 -->
+  <div id="gradesModal" class="modal-backdrop" style="display: none;">
+    <div class="modal-dialog grades-dialog">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title">学业成绩与 GPA 中心</h3>
+          <p class="modal-desc">长安大学本科教务系统 · 全科具体成绩与学期绩点</p>
+        </div>
+        <button class="modal-close-btn" id="gradesCloseBtn">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="gpa-highlight-banner" id="gpaSummaryBanner">
+          <div class="gpa-num-box">
+            <span class="gpa-val" id="latestGpaVal">3.72</span>
+            <span class="gpa-lbl">最新学期绩点</span>
+          </div>
+          <div class="gpa-desc-box">
+            <h4 id="gpaSummaryTitle">学业进展优异</h4>
+            <p id="gpaSummarySubtitle">已收录历年各学期课程明细与成绩单，支持按学期与课程名筛选查看</p>
+          </div>
+          <div class="gpa-action-box">
+            <button id="btnRefreshGrades" class="nav-action-btn" title="强制从学校教务重新拉取最新成绩">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                <path d="M3 3v5h5"></path>
+                <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path>
+                <path d="M16 21h5v-5"></path>
+              </svg>
+              <span>刷新成绩</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 标签页切换器 -->
+        <div class="grade-tabs-bar">
+          <div class="grade-tabs">
+            <button class="grade-tab-btn active" data-tab="courses" id="tabCoursesBtn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
+              </svg>
+              <span>单门课程成绩明细</span>
+            </button>
+            <button class="grade-tab-btn" data-tab="summary" id="tabSummaryBtn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="20" x2="18" y2="10"></line>
+                <line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="14"></line>
+              </svg>
+              <span>历年学期绩点概览</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 课程明细面板 (Tab 1) -->
+        <div id="gradeCoursesPanel" class="grade-panel active">
+          <div class="grade-filter-toolbar">
+            <div class="filter-left">
+              <select id="gradeSemesterSelect" class="grade-select" title="按学期筛选课程">
+                <option value="all">全部学期课程</option>
+              </select>
+              <div class="grade-search-box">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" id="gradeSearchInput" placeholder="搜索课程名称...">
+              </div>
+            </div>
+            <div class="filter-right">
+              <span class="grade-stat-badge" id="gradeCourseCountBadge">共 0 门课程</span>
+            </div>
+          </div>
+
+          <div class="grades-table-wrapper">
+            <table class="modern-table">
+              <thead>
+                <tr>
+                  <th>学期</th>
+                  <th>课程名称</th>
+                  <th>类别</th>
+                  <th>学分</th>
+                  <th>平时/期末</th>
+                  <th>最终成绩</th>
+                  <th>单科绩点</th>
+                </tr>
+              </thead>
+              <tbody id="gradeCoursesTableBody">
+                <!-- 动态注入单门课程明细 -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 历年汇总面板 (Tab 2) -->
+        <div id="gradeSummaryPanel" class="grade-panel" style="display: none;">
+          <div class="grades-table-wrapper">
+            <table class="modern-table">
+              <thead>
+                <tr>
+                  <th>学年度</th>
+                  <th>学期</th>
+                  <th>修读门数</th>
+                  <th>总学分</th>
+                  <th>学期平均绩点 (GPA)</th>
+                </tr>
+              </thead>
+              <tbody id="gradesSummaryTableBody">
+                <!-- 动态注入学期总表 -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 导出日历模态弹窗 -->
+  <div id="exportModal" class="modal-backdrop" style="display: none;">
+    <div class="modal-dialog export-dialog">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title">同步至手机系统日历 (.ics)</h3>
+          <p class="modal-desc">导入后上课前 20 分钟自动在手机和手表上推送提醒</p>
+        </div>
+        <button class="modal-close-btn" id="exportCloseBtn">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="termStartDateInput">开学第一周周一日期</label>
+          <input type="date" id="termStartDateInput" class="modern-input" value="2026-08-31">
+          <small class="form-hint">默认为当前学期开学周一，如需调整可自定义</small>
+        </div>
+
+        <div class="device-guides">
+          <div class="guide-card">
+            <div class="guide-title">🍎 iPhone / iPad / Mac</div>
+            <p>点击“下载日历文件”后，用 Safari 浏览器打开下载的 `.ics` 文件，点击“全部添加到日历”即可自动同步至 Apple Calendar 与 Apple Watch！</p>
+          </div>
+          <div class="guide-card">
+            <div class="guide-title">🤖 华为 / 小米 / OPPO / vivo</div>
+            <p>下载 `.ics` 文件后，在文件管理器或通过“日历 App -> 设置 -> 导入日程”选取该文件即可，锁屏与桌面小部件会自动显示下一节课！</p>
+          </div>
+        </div>
+
+        <button id="startDownloadIcsBtn" class="btn-primary-auth full-width">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span>立即生成并下载日历文件 (.ics)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

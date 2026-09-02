@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.log
+venv/
+.env
+
+# 离线数据缓存（包含个人学籍与成绩信息，严禁提交）
+data_cache/
+server/data/
+*.db
+*.sqlite3
+
+# Flutter & Dart
+chd_app/.dart_tool/
+chd_app/.flutter-plugins
+chd_app/.flutter-plugins-dependencies
+chd_app/.packages
+chd_app/build/
+chd_app/.idea/
+
+# 安装包 (建议发布到 GitHub Releases，不污染代码仓库)
+*.apk
+server.zip
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

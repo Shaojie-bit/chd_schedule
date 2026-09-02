@@ -1,0 +1,9 @@
+services:
+  chd-server:
+    build: .
+    container_name: chd-server
+    restart: always
+    ports:
+      - "2543:2543"
+    volumes:
+      - ./data:/app/data
